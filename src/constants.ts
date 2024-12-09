@@ -37,6 +37,9 @@ export const COMMAND_REMOVE_PAPER_NAME = "Remove Paper from Library";
 export const COMMAND_OPEN_PDF_IN_SYSTEM_APP = "open-pdf-in-system-app";
 export const COMMAND_OPEN_PDF_IN_SYSTEM_APP_NAME = "Open PDF in System App";
 
+export const COMMAND_GENERATE_PDF_NOTE = "generate-pdf-note";
+export const COMMAND_GENERATE_PDF_NOTE_NAME = "Generate a Literature Note from current PDF";
+
 
 // Settings 
 export const SETTING_GENERAL_HEADER = "Library Settings";

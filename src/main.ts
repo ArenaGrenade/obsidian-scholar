@@ -15,6 +15,9 @@ import {
 	searchSemanticScholar,
 	fetchSemanticScholarPaperReferences,
 } from "./paperData";
+import { PDFDocument } from 'pdf-lib';
+import * as fs from "fs/promises";
+import * as path from "path";
 import {
 	COMMAND_PAPER_NOTE_NAME,
 	COMMAND_PAPER_NOTE_ID,
@@ -31,6 +34,8 @@ import {
 	COMMAND_REMOVE_PAPER_NAME,
 	COMMAND_OPEN_PDF_IN_SYSTEM_APP,
 	COMMAND_OPEN_PDF_IN_SYSTEM_APP_NAME,
+	COMMAND_GENERATE_PDF_NOTE,
+	COMMAND_GENERATE_PDF_NOTE_NAME,
 	NOTICE_RETRIEVING_ARXIV,
 	NOTICE_RETRIEVING_S2,
 	NOTICE_SEARCH_BIBTEX_NOT_FOUND,
@@ -203,6 +208,53 @@ export default class ObsidianScholarPlugin extends Plugin {
 				}
 			},
 		});
+
+		this.addCommand({
+			id: COMMAND_GENERATE_PDF_NOTE,
+			name: COMMAND_GENERATE_PDF_NOTE_NAME,
+			callback: async () => {
+				const currentFile = this.app.workspace.getActiveFile();
+
+				if (!currentFile || currentFile.extension !== "pdf" || !this.obsidianScholar.isFileInPDFLocation(currentFile)) {
+					return false;
+				} else {
+					console.log("INSIDE GENERATE COMMAND!!!");
+					const pdfAbsolutePath: string = path.join(this.app.vault.adapter.basePath, currentFile.path);
+					const pdfData = await fs.readFile(pdfAbsolutePath);
+					const pdf = await PDFDocument.load(pdfData);
+
+					let paperTitle: string = pdf.getTitle() ?? "";
+					console.log("Paper Title: ", paperTitle, paperTitle.length);
+					if (paperTitle.length < 3)
+						paperTitle = currentFile.basename;
+
+					const safeFileName = paperTitle.replace(/[&/\\#,+()$~%.'":*?<>{}]/g, "");
+					const pathToNoteFile = this.settings.NoteLocation + this.obsidianScholar.pathSep + safeFileName + ".md";
+					const pathToPDFFile: string = this.settings.pdfDownloadLocation + this.obsidianScholar.pathSep + safeFileName + ".pdf";
+					const absolutePathToPDFFile: string = path.join(this.app.vault.adapter.basePath, pathToPDFFile);
+
+					const paperData: StructuredPaperData = {
+						title: paperTitle,
+						authors: pdf.getAuthor()?.split(/[,;]/) ?? [],
+						abstract: "",
+						url: "",
+						venue: pdf.getSubject() ?? "",
+						publicationDate: pdf.getCreationDate()?.getFullYear().toString() ?? "",
+						tags: pdf.getKeywords()?.split(/[,;]/) ?? [],
+						pdfPath: pathToPDFFile,
+						citekey: "",
+						bibtex: ""
+					};
+
+					console.log(paperData, pathToNoteFile, pathToPDFFile);
+
+					await fs.rename(pdfAbsolutePath, absolutePathToPDFFile);
+					console.log(`Renamed file from ${pdfAbsolutePath} to ${absolutePathToPDFFile}.`);
+
+					await this.obsidianScholar.createFileFromPaperData(paperData, pathToNoteFile);
+				}
+			}
+		})
 
 		this.addSettingTab(new ObsidianScholarSettingTab(this.app, this));
 

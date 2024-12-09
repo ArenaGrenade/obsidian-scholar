@@ -16,7 +16,7 @@
 	font-weight: var(--font-semibold);
 	letter-spacing: 1px;
 	text-transform: uppercase;
-}
+}	
 
 .paper-search-result-title {
 	font-size: var(--font-ui-medium);
@@ -28,6 +28,15 @@
 	color: var(--text-faint);
 	font-weight: var(--font-light);
 	font-size: var(--font-ui-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.paper-search-result-authors:hover {
+	text-overflow: unset;
+	white-space: unset;
+	overflow: auto;
 }
 
 .paper-search-result-abstract {

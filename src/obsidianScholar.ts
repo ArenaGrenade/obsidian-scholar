@@ -91,6 +91,14 @@ export class ObsidianScholar {
 		}
 	}
 
+	isFileInPDFLocation(file: TFile | string): boolean {
+		if (typeof file === "string") {
+			return file.startsWith(this.settings.pdfDownloadLocation);
+		} else {
+			return file.path.startsWith(this.settings.pdfDownloadLocation);
+		}
+	}
+
 	async extractPaperBibtexFromFile(
 		citekey: string
 	): Promise<string | undefined> {
